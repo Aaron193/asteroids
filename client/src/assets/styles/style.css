@@ -1,0 +1,26 @@
+body {
+    overflow: hidden;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.join-container {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 30px;
+}
+
+#nickname_input {
+    border-radius: 20px;
+    height: 100%;
+}
+
+#play_btn {
+    background-color: rgb(43, 110, 255);
+    border-radius: 20px;
+    height: 100%;
+}

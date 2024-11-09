@@ -1,0 +1,9 @@
+export const CLIENT_PACKET_HEADER = {
+    JOIN_SERVER: 0,
+};
+
+export const SERVER_PACKET_HEADER = {
+    CREATE_ENTITY: 1,
+    DESTROY_ENTITY: 2,
+    UPDATE_ENTITY: 3,
+};
