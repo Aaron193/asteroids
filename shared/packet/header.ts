@@ -6,4 +6,6 @@ export const SERVER_PACKET_HEADER = {
     CREATE_ENTITY: 1,
     DESTROY_ENTITY: 2,
     UPDATE_ENTITY: 3,
+    SPAWN_SUCCESS: 4,
+    SET_CAMERA: 4,
 };

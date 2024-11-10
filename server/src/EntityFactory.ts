@@ -93,7 +93,7 @@ export class EntityFactory {
         });
 
         // const force = new b2Vec2(Math.random() * 100, Math.random() * 100);
-        const mag = 10;
+        const mag = 5;
         const impulse = new b2Vec2(mag * Math.cos(Math.random()), mag * Math.sin(Math.random()));
         // body.ApplyForce(force, body.GetWorldCenter());
         body.ApplyLinearImpulseToCenter(impulse, true);

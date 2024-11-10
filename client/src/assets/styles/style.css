@@ -12,6 +12,7 @@ body {
     justify-content: center;
     align-items: center;
     height: 30px;
+    margin-top: 100px;
 }
 
 #nickname_input {

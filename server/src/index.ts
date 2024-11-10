@@ -131,11 +131,13 @@ function syncClients() {
         for (const eid of newVisible) {
             if (!oldVisible.has(eid)) {
                 const pos = bodyMap.get(eid)!.GetPosition();
+                const rot = bodyMap.get(eid)!.GetAngle();
                 writer.writeU8(SERVER_PACKET_HEADER.CREATE_ENTITY);
                 writer.writeU32(eid);
                 writer.writeU8(C_Type.type[eid]);
                 writer.writeF32(pixels(pos.x));
                 writer.writeF32(pixels(pos.y));
+                writer.writeF32(rot);
             }
         }
 
@@ -151,10 +153,12 @@ function syncClients() {
         for (const eid of newVisible) {
             if (oldVisible.has(eid)) {
                 const pos = bodyMap.get(eid)!.GetPosition();
+                const rot = bodyMap.get(eid)!.GetAngle();
                 writer.writeU8(SERVER_PACKET_HEADER.UPDATE_ENTITY);
                 writer.writeU32(eid);
                 writer.writeF32(pixels(pos.x));
                 writer.writeF32(pixels(pos.y));
+                writer.writeF32(rot);
             }
         }
 
