@@ -98,6 +98,9 @@ export class Socket {
                                 addComponent(ECS_WORLD, C_Asteroid, clientEid);
                                 addComponent(ECS_WORLD, C_Interpolate, clientEid);
                                 break;
+                            case EntityTypes.PLAYER:
+                                addComponent(ECS_WORLD, C_Interpolate, clientEid);
+                                break;
                         }
 
                         Interpolator.instance.addSnapshot(clientEid);
@@ -129,12 +132,15 @@ export class Socket {
                     break;
                 case SERVER_PACKET_HEADER.SET_CAMERA:
                     {
+                        console.log('set camera');
                         const eid = reader.readU32();
                         State.cameraEid = eid;
                     }
                     break;
                 case SERVER_PACKET_HEADER.SPAWN_SUCCESS:
                     {
+                        console.log('spawn success');
+                        (document.querySelector('.join-container') as HTMLDivElement).style.display = 'none';
                     }
                     break;
                 default:

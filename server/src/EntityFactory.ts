@@ -3,6 +3,7 @@ import { C_Body, C_Camera, C_Dynamic, C_Networked, C_Type, Q_Moving } from './ec
 import { GameWorld } from './World';
 import { b2Body, b2BodyDef, b2BodyType, b2Vec2, b2FixtureDef, b2CircleShape } from '@box2d/core';
 import { EntityTypes } from '../../shared/types';
+import { meters, pixels } from './utils/conversion';
 
 export const world = createWorld();
 
@@ -36,7 +37,7 @@ export class EntityFactory {
         const b2world = GameWorld.instance.world;
         const bodyDef: b2BodyDef = {
             type: b2BodyType.b2_dynamicBody,
-            position: { x: 0, y: 4 },
+            position: { x: 5, y: 5 },
             userData: {
                 eid: eid,
             },
@@ -46,12 +47,13 @@ export class EntityFactory {
         bodyMap.set(eid, body);
 
         const circle = new b2CircleShape();
-        circle.m_radius = 1;
+        circle.m_radius = meters(10);
 
         body.CreateFixture({
             shape: circle,
             density: 1.0,
-            friction: 0.3,
+            friction: 0.0,
+            restitution: 1.0,
         });
 
         return eid;
@@ -75,25 +77,27 @@ export class EntityFactory {
             userData: {
                 eid: eid,
             },
-            linearDamping: 0,
-            angularDamping: 0,
         };
 
         const body = b2world.CreateBody(bodyDef);
         bodyMap.set(eid, body);
 
         const circle = new b2CircleShape();
-        circle.m_radius = 1;
+        circle.m_radius = meters(10);
 
         body.CreateFixture({
             shape: circle,
-            density: 1,
-            friction: 0,
-            restitution: 1,
+            density: 1.0,
+            friction: 0.0,
+            restitution: 1.0,
+            filter: {
+                categoryBits: 1 << 1,
+                maskBits: 1 << 0,
+            },
         });
 
         // const force = new b2Vec2(Math.random() * 100, Math.random() * 100);
-        const mag = 5;
+        const mag = 0.3;
         const impulse = new b2Vec2(mag * Math.cos(Math.random()), mag * Math.sin(Math.random()));
         // body.ApplyForce(force, body.GetWorldCenter());
         body.ApplyLinearImpulseToCenter(impulse, true);

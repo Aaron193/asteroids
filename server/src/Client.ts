@@ -3,9 +3,10 @@ import { SocketUserData } from './index';
 import { BufferWriter } from '../../shared/packet/BufferWriter';
 import { BufferReader } from '../../shared/packet/BufferReader';
 import { CLIENT_PACKET_HEADER, SERVER_PACKET_HEADER } from '../../shared/packet/header';
-import { EntityFactory } from './EntityFactory';
+import { EntityFactory, world } from './EntityFactory';
 import { EDict } from '../../shared/EDict';
 import { C_Camera } from './ecs';
+import { removeEntity } from 'bitecs';
 
 const reader = new BufferReader();
 
@@ -52,10 +53,17 @@ export class Client {
                     this.nickname = nickname;
                     this.active = true;
 
+                    removeEntity(world, this.eid);
+                    this.eid = EntityFactory.createPlayer();
+                    C_Camera.eid[this.eid] = this.eid;
+
                     // write handshake to spawn client into the game server
                     const writer = this.bufferWriter;
+
+                    writer.writeU8(SERVER_PACKET_HEADER.SET_CAMERA);
+                    writer.writeU32(C_Camera.eid[this.eid]);
+
                     writer.writeU8(SERVER_PACKET_HEADER.SPAWN_SUCCESS);
-                    writer.writeU32(this.eid);
 
                     console.log('client joined', nickname);
                     break;
