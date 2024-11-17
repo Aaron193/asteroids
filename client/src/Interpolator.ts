@@ -2,7 +2,7 @@ import { C_Interpolate, C_Position, C_Rotation, ECS_WORLD, Q_Interpolate } from 
 
 export class Interpolator {
     private static _instance: Interpolator;
-    public static BUFFER_SIZE = 16;
+    public static BUFFER_SIZE = 8;
     public static LAG = 100;
 
     static get instance(): Interpolator {
