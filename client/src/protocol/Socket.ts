@@ -37,8 +37,6 @@ export class Socket {
     }
 
     send(): void {
-        // ws does not exist here!?!?
-        console.log('SEND', this);
         if (this.isOpen()) {
             this.ws!.send(this.writer.getBuffer());
             this.writer.clear();

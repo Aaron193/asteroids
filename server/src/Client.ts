@@ -5,8 +5,9 @@ import { BufferReader } from '../../shared/packet/BufferReader';
 import { CLIENT_PACKET_HEADER, SERVER_PACKET_HEADER } from '../../shared/packet/header';
 import { EntityFactory, world } from './EntityFactory';
 import { EDict } from '../../shared/EDict';
-import { C_Camera } from './ecs';
+import { C_Camera, C_ClientControls } from './ecs';
 import { removeEntity } from 'bitecs';
+import { meters } from './utils/conversion';
 
 const reader = new BufferReader();
 
@@ -66,6 +67,27 @@ export class Client {
                     writer.writeU8(SERVER_PACKET_HEADER.SPAWN_SUCCESS);
 
                     console.log('client joined', nickname);
+                    break;
+                }
+                case CLIENT_PACKET_HEADER.MOUSE: {
+                    const angle = reader.readF32();
+                    let mag = reader.readF32();
+                    if (mag < 1) mag = 0;
+                    if (mag > 1) mag = 1;
+
+                    const velX = mag * Math.cos(angle);
+                    const velY = mag * Math.sin(angle);
+
+                    C_ClientControls.x[this.eid] = velX;
+                    C_ClientControls.y[this.eid] = velY;
+                    break;
+                }
+                case CLIENT_PACKET_HEADER.MOUSE_DOWN: {
+                    C_ClientControls.turbo[this.eid] = +true;
+                    break;
+                }
+                case CLIENT_PACKET_HEADER.MOUSE_UP: {
+                    C_ClientControls.turbo[this.eid] = +false;
                     break;
                 }
             }

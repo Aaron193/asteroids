@@ -24,8 +24,8 @@ export class GameWorld {
      * Create boundaries for the game world
      */
     private createWorldBoundaries() {
-        const worldWidth = meters(1000);
-        const worldHeight = meters(1000);
+        const worldWidth = meters(5000);
+        const worldHeight = meters(5000);
 
         // Create a wall
         const createBoarder = (startX: number, startY: number, endX: number, endY: number) => {
@@ -36,7 +36,8 @@ export class GameWorld {
             shape.SetTwoSided(new b2Vec2(startX, startY), new b2Vec2(endX, endY));
             body.CreateFixture({
                 shape: shape,
-                restitution: 1,
+                restitution: 0,
+                friction: 0.0,
                 filter: {
                     categoryBits: 1 << 0,
                 },

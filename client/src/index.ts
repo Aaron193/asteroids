@@ -26,14 +26,46 @@ playButton.onclick = function () {
     socket.send();
 };
 
-const socket = Socket.instance;
-socket.connect();
-
 // we will move this to its own Game class at some point
 export const State = {
     // must store server side eid
     cameraEid: -1,
+    mouse: {
+        x: 0,
+        y: 0,
+    },
+    mouseLastSend: {
+        x: 0,
+        y: 0,
+        timestamp: 0,
+    },
+    mousedown: false,
 };
+
+window.addEventListener('mousemove', function (event: MouseEvent) {
+    const x = event.clientX;
+    const y = event.clientY;
+
+    State.mouse.x = x;
+    State.mouse.y = y;
+});
+
+const socket = Socket.instance;
+socket.connect();
+
+window.addEventListener('mousedown', function (event: MouseEvent) {
+    State.mousedown = true;
+    const socket = Socket.instance;
+    socket.writer.writeU8(CLIENT_PACKET_HEADER.MOUSE_DOWN);
+    socket.send();
+});
+
+window.addEventListener('mouseup', function (event: MouseEvent) {
+    State.mousedown = false;
+    const socket = Socket.instance;
+    socket.writer.writeU8(CLIENT_PACKET_HEADER.MOUSE_UP);
+    socket.send();
+});
 
 let then = performance.now();
 function tick() {
@@ -41,7 +73,7 @@ function tick() {
     const delta = (now - then) / 1000;
     then = now;
 
-    GameUpdate(delta);
+    GameUpdate(now, delta);
     GameRender();
 
     requestAnimationFrame(tick);
@@ -49,8 +81,37 @@ function tick() {
 
 tick();
 
-function GameUpdate(delta: number) {
+function GameUpdate(now: number, delta: number) {
     Interpolator.instance.update();
+
+    // Mouse update
+    {
+        const lastSend = State.mouseLastSend;
+
+        if (now - lastSend.timestamp > 50 && (lastSend.x !== State.mouse.x || lastSend.y !== State.mouse.y)) {
+            const mouse = State.mouse;
+            lastSend.x = mouse.x;
+            lastSend.y = mouse.y;
+            lastSend.timestamp = now;
+
+            const centerX = window.innerWidth * 0.5;
+            const centerY = window.innerHeight * 0.5;
+
+            const angle = Math.atan2(mouse.y - centerY, mouse.x - centerX);
+            const distFromCenter = Math.sqrt((mouse.x - centerX) ** 2 + (mouse.y - centerY) ** 2);
+            const mag = Math.min(1, Math.max(distFromCenter / 100, 0));
+            console.log('mag', mag);
+
+            const socket = Socket.instance;
+            const writer = socket.writer;
+
+            writer.writeU8(CLIENT_PACKET_HEADER.MOUSE);
+            writer.writeF32(angle);
+            writer.writeF32(mag);
+            socket.send();
+            // console.log('sending angle', angle);
+        }
+    }
 }
 
 function GameRender() {
@@ -80,7 +141,7 @@ function GameRender() {
 }
 
 function drawGrid() {
-    const gridSize = 100;
+    const gridSize = 300;
     const eid = EID_MAP.get(State.cameraEid)!;
     const x = C_Position.x[eid];
     const y = C_Position.y[eid];
@@ -89,8 +150,10 @@ function drawGrid() {
     const startX = x - (x % gridSize) - window.innerWidth / 2;
     const startY = y - (y % gridSize) - window.innerHeight / 2;
 
-    ctx.strokeStyle = 'black';
-    ctx.lineWidth = 1;
+    ctx.save();
+    ctx.strokeStyle = 'grey';
+    ctx.globalAlpha = 0.5;
+    ctx.lineWidth = 3;
     ctx.beginPath();
 
     // Draw vertical lines
@@ -106,4 +169,5 @@ function drawGrid() {
     }
 
     ctx.stroke();
+    ctx.restore();
 }

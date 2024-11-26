@@ -1,5 +1,8 @@
 export const CLIENT_PACKET_HEADER = {
     JOIN_SERVER: 0,
+    MOUSE: 1,
+    MOUSE_DOWN: 2,
+    MOUSE_UP: 3,
 };
 
 export const SERVER_PACKET_HEADER = {

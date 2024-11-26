@@ -4,14 +4,115 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="stylesheet" href="./assets/styles/style.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Galindo&display=swap" rel="stylesheet">
         <title>Document</title>
     </head>
-    <body>
+    <body class="galindo-regular">
         <canvas id="game_canvas"></canvas>
 
         <div class="join-container">
             <input maxlength="12" placeholder="Enter nickname" id="nickname_input"></input>
             <button id="play_btn">PLAY</button>
+        </div>
+
+        <div class="game-container">
+            <div class="game-bl-hud">
+                <div class="upgrades">
+                    <div class="upgrade">
+                        <div class="title shadow-text-3">Speed</div>
+                        <div class="levels">
+                            <div class="level-item yellow"></div>
+                            <div class="level-item yellow"></div>
+                            <div class="level-item yellow"></div>
+                            <div class="level-item yellow"></div>
+                            <div class="level-item yellow"></div>
+                            <div class="level-item yellow"></div>
+                            <!-- <div class="level-item yellow"></div> -->
+                            <div class="level-item yellow increase-level">+</div>
+                        </div>
+                    </div>
+                    <div class="upgrade">
+                        <div class="title shadow-text-3">Bullet Damage</div>
+                        <div class="levels">
+                            <div class="level-item red"></div>
+                            <div class="level-item red"></div>
+                            <div class="level-item red"></div>
+                            <div class="level-item red"></div>
+                            <div class="level-item red"></div>
+                            <div class="level-item red"></div>
+                            <!-- <div class="level-item red"></div> -->
+                            <div class="level-item red increase-level">+</div>
+                        </div>
+                    </div>
+                    <div class="upgrade">
+                        <div class="title shadow-text-3">Bullet Regen</div>
+                        <div class="levels">
+                            <div class="level-item green"></div>
+                            <div class="level-item green"></div>
+                            <div class="level-item green"></div>
+                            <div class="level-item green"></div>
+                            <div class="level-item green"></div>
+                            <div class="level-item green"></div>
+                            <!-- <div class="level-item green"></div> -->
+                            <div class="level-item green increase-level">+</div>
+                        </div>
+                    </div>
+                    <div class="upgrade">
+                        <div class="title shadow-text-3">Health</div>
+                        <div class="levels">
+                            <div class="level-item blue"></div>
+                            <div class="level-item blue"></div>
+                            <div class="level-item blue"></div>
+                            <div class="level-item blue"></div>
+                            <div class="level-item blue"></div>
+                            <div class="level-item blue"></div>
+                            <!-- <div class="level-item blue"></div> -->
+                            <div class="level-item blue increase-level">+</div>
+                        </div>
+                    </div>
+                    <div class="upgrade">
+                        <div class="title shadow-text-3">Health Regen</div>
+                        <div class="levels">
+                            <div class="level-item orange"></div>
+                            <div class="level-item orange"></div>
+                            <div class="level-item orange"></div>
+                            <div class="level-item orange"></div>
+                            <div class="level-item orange"></div>
+                            <div class="level-item orange"></div>
+                            <!-- <div class="level-item orange"></div> -->
+                            <div class="level-item orange increase-level">+</div>
+                        </div>
+                    </div>
+                    <div class="upgrade">
+                        <div class="title shadow-text-3">Turbo</div>
+                        <div class="levels">
+                            <div class="level-item purple"></div>
+                            <div class="level-item purple"></div>
+                            <div class="level-item purple"></div>
+                            <div class="level-item purple"></div>
+                            <div class="level-item purple"></div>
+                            <div class="level-item purple"></div>
+                            <!-- <div class="level-item purple"></div> -->
+                            <div class="level-item purple increase-level">+</div>
+                        </div>
+                    </div>
+                    <div class="upgrade">
+                        <div class="title shadow-text-3">Turbo Regen</div>
+                        <div class="levels">
+                            <div class="level-item pink"></div>
+                            <div class="level-item pink"></div>
+                            <div class="level-item pink"></div>
+                            <div class="level-item pink"></div>
+                            <div class="level-item pink"></div>
+                            <div class="level-item pink"></div>
+                            <!-- <div class="level-item pink"></div> -->
+                            <div class="level-item pink increase-level">+</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </body>
 </html>
