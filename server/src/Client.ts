@@ -65,6 +65,7 @@ export class Client {
                     writer.writeU32(C_Camera.eid[this.eid]);
 
                     writer.writeU8(SERVER_PACKET_HEADER.SPAWN_SUCCESS);
+                    writer.writeU32(this.eid);
 
                     console.log('client joined', nickname);
                     break;
@@ -80,6 +81,7 @@ export class Client {
 
                     C_ClientControls.x[this.eid] = velX;
                     C_ClientControls.y[this.eid] = velY;
+                    C_ClientControls.rotation[this.eid] = angle;
                     break;
                 }
                 case CLIENT_PACKET_HEADER.MOUSE_DOWN: {

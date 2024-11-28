@@ -1,9 +1,10 @@
 import { addComponent, addEntity, removeEntity } from 'bitecs';
-import { C_Asteroid, C_Position, EID_MAP, ECS_WORLD, Q_Position } from './ecs/index';
+import { C_Asteroid, C_Position, EID_MAP, ECS_WORLD, Q_Position, C_Rotation } from './ecs/index';
 import { CLIENT_PACKET_HEADER, SERVER_PACKET_HEADER, BufferWriter, BufferReader } from '../../shared/packet/index';
 import { EntityTypes } from '../../shared/types';
 import { Socket } from './protocol/Socket';
 import { Interpolator } from './Interpolator';
+import { Sprite } from './Sprite';
 
 const canvas = document.getElementById('game_canvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
@@ -26,10 +27,13 @@ playButton.onclick = function () {
     socket.send();
 };
 
+const drone = new Sprite('assets/images/drone.png');
+
 // we will move this to its own Game class at some point
 export const State = {
     // must store server side eid
     cameraEid: -1,
+    myEid: -1,
     mouse: {
         x: 0,
         y: 0,
@@ -100,7 +104,6 @@ function GameUpdate(now: number, delta: number) {
             const angle = Math.atan2(mouse.y - centerY, mouse.x - centerX);
             const distFromCenter = Math.sqrt((mouse.x - centerX) ** 2 + (mouse.y - centerY) ** 2);
             const mag = Math.min(1, Math.max(distFromCenter / 100, 0));
-            console.log('mag', mag);
 
             const socket = Socket.instance;
             const writer = socket.writer;
@@ -118,6 +121,7 @@ function GameRender() {
     if (!EID_MAP.has(State.cameraEid)) return;
 
     const cameraEid = EID_MAP.get(State.cameraEid)!;
+    const myEid = EID_MAP.get(State.myEid)!;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -132,10 +136,13 @@ function GameRender() {
         const eid = eids[i];
         const x = C_Position.x[eid];
         const y = C_Position.y[eid];
-        ctx.beginPath();
-        ctx.arc(x, y, 10, 0, 2 * Math.PI);
-        ctx.fillStyle = eid === cameraEid ? 'blue' : 'red';
-        ctx.fill();
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(
+            eid === myEid ? Math.atan2(State.mouse.y - window.innerHeight * 0.5, State.mouse.x - window.innerWidth * 0.5) : C_Rotation.rotation[eid]
+        );
+        ctx.drawImage(drone.image, -drone.halfWidth, -drone.halfHeight);
+        ctx.restore();
     }
     ctx.restore();
 }

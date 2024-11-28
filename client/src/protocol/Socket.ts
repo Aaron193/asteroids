@@ -137,7 +137,9 @@ export class Socket {
                     break;
                 case SERVER_PACKET_HEADER.SPAWN_SUCCESS:
                     {
-                        console.log('spawn success');
+                        // This is our player's eid
+                        const serverEid = reader.readU32();
+                        State.myEid = serverEid;
                         (document.querySelector('.join-container') as HTMLDivElement).style.display = 'none';
                     }
                     break;

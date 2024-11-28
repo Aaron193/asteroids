@@ -91,6 +91,7 @@ function tick() {
         const eid = eids[i];
         const x = C_ClientControls.x[eid];
         const y = C_ClientControls.y[eid];
+        const rotation = C_ClientControls.rotation[eid];
         const isTurbo = +C_ClientControls.turbo[eid];
         const body = bodyMap.get(eid)!;
 
@@ -120,6 +121,7 @@ function tick() {
         }
 
         body.SetLinearVelocity(newVelocity);
+        body.SetAngle(rotation);
     }
 
     syncClients();

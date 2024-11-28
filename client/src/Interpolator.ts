@@ -37,6 +37,7 @@ export class Interpolator {
 
         let loopCounter = 0;
 
+        // TODO: The interpolation looks fine but this feels too hacky
         while (buffer[nextIndex * 4 + 3] > 0 && buffer[nextIndex * 4 + 3] < currentTime) {
             loopCounter++;
             if (loopCounter > Interpolator.BUFFER_SIZE) return;
@@ -58,7 +59,13 @@ export class Interpolator {
 
         C_Position.x[eid] = x0 + (x1 - x0) * alpha;
         C_Position.y[eid] = y0 + (y1 - y0) * alpha;
-        C_Rotation.rotation[eid] = rotation0 + (rotation1 - rotation0) * alpha;
+
+        let deltaRotation = rotation1 - rotation0;
+
+        if (deltaRotation > Math.PI) deltaRotation -= 2 * Math.PI;
+        if (deltaRotation < -Math.PI) deltaRotation += 2 * Math.PI;
+
+        C_Rotation.rotation[eid] = rotation0 + deltaRotation * alpha;
     }
 
     update() {
