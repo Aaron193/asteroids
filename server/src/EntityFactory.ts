@@ -56,8 +56,8 @@ export class EntityFactory {
             friction: 0.0,
             restitution: 0.0,
             filter: {
-                categoryBits: 1 << 1,
-                maskBits: 1 << 0,
+                categoryBits: GameWorld.CollisionBitMask.DRONE,
+                maskBits: GameWorld.CollisionBitMask.OBSTACLE | GameWorld.CollisionBitMask.DRONE,
             },
         });
 
@@ -96,16 +96,17 @@ export class EntityFactory {
             friction: 0.0,
             restitution: 1.0,
             filter: {
-                categoryBits: 1 << 1,
-                maskBits: 1 << 0,
+                categoryBits: GameWorld.CollisionBitMask.ASTEROID,
+                maskBits: GameWorld.CollisionBitMask.OBSTACLE | GameWorld.CollisionBitMask.DRONE,
             },
         });
 
         // const force = new b2Vec2(Math.random() * 100, Math.random() * 100);
-        const mag = 0.3;
+        const mag = 0.1;
         const impulse = new b2Vec2(mag * Math.cos(Math.random()), mag * Math.sin(Math.random()));
         // body.ApplyForce(force, body.GetWorldCenter());
         body.ApplyLinearImpulseToCenter(impulse, true);
+        body.ApplyTorque(Math.random() * 0.01);
 
         return eid;
     }

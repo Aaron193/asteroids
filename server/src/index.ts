@@ -8,6 +8,7 @@ import { C_Camera, C_ClientControls, C_Networked, C_Type, Q_ClientControls } fro
 import { SERVER_PACKET_HEADER } from '../../shared/packet/header';
 import { hasComponent } from 'bitecs';
 import { pixels } from './utils/conversion';
+import { EntityTypes } from '../../shared/types';
 
 const port = 9001;
 
@@ -95,7 +96,7 @@ function tick() {
         const isTurbo = +C_ClientControls.turbo[eid];
         const body = bodyMap.get(eid)!;
 
-        const MOVE_SPEED = 5;
+        const MOVE_SPEED = 2.5;
         const ACCELERATION = 2;
         // slow down factor
         const DAMPING = 0.98;

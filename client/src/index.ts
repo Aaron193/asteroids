@@ -1,4 +1,4 @@
-import { addComponent, addEntity, removeEntity } from 'bitecs';
+import { addComponent, addEntity, hasComponent, removeEntity } from 'bitecs';
 import { C_Asteroid, C_Position, EID_MAP, ECS_WORLD, Q_Position, C_Rotation } from './ecs/index';
 import { CLIENT_PACKET_HEADER, SERVER_PACKET_HEADER, BufferWriter, BufferReader } from '../../shared/packet/index';
 import { EntityTypes } from '../../shared/types';
@@ -28,6 +28,7 @@ playButton.onclick = function () {
 };
 
 const drone = new Sprite('assets/images/drone.png');
+const asteroid = new Sprite('assets/images/asteroid.png');
 
 // we will move this to its own Game class at some point
 export const State = {
@@ -136,12 +137,13 @@ function GameRender() {
         const eid = eids[i];
         const x = C_Position.x[eid];
         const y = C_Position.y[eid];
+        const sprite = hasComponent(ECS_WORLD, C_Asteroid, eid) ? asteroid : drone;
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(
             eid === myEid ? Math.atan2(State.mouse.y - window.innerHeight * 0.5, State.mouse.x - window.innerWidth * 0.5) : C_Rotation.rotation[eid]
         );
-        ctx.drawImage(drone.image, -drone.halfWidth, -drone.halfHeight);
+        ctx.drawImage(sprite.image, -sprite.halfWidth, -sprite.halfHeight);
         ctx.restore();
     }
     ctx.restore();

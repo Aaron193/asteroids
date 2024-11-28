@@ -5,6 +5,12 @@ export class GameWorld {
     private static _instance: GameWorld;
     world: b2World;
 
+    static CollisionBitMask = {
+        OBSTACLE: 1 << 0,
+        DRONE: 1 << 1,
+        ASTEROID: 1 << 1,
+    };
+
     private constructor() {
         this.world = b2World.Create({ x: 0, y: 0 });
         this.createWorldBoundaries();
@@ -39,7 +45,7 @@ export class GameWorld {
                 restitution: 0,
                 friction: 0.0,
                 filter: {
-                    categoryBits: 1 << 0,
+                    categoryBits: GameWorld.CollisionBitMask.OBSTACLE,
                 },
             });
         };
