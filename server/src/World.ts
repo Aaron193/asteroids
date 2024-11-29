@@ -1,5 +1,8 @@
-import { b2World, b2Vec2, b2BodyType, b2PolygonShape, b2FixtureDef, b2EdgeShape } from '@box2d/core';
+import { b2World, b2Vec2, b2BodyType, b2PolygonShape, b2FixtureDef, b2EdgeShape, b2ContactListener, b2Contact } from '@box2d/core';
 import { meters } from './utils/conversion';
+import { EntityFactory, world } from './EntityFactory';
+import { C_Type } from './ecs';
+import { EntityTypes } from '../../shared/types';
 
 export class GameWorld {
     private static _instance: GameWorld;
@@ -8,12 +11,64 @@ export class GameWorld {
     static CollisionBitMask = {
         OBSTACLE: 1 << 0,
         DRONE: 1 << 1,
-        ASTEROID: 1 << 1,
+        ASTEROID: 1 << 2,
     };
 
     private constructor() {
         this.world = b2World.Create({ x: 0, y: 0 });
         this.createWorldBoundaries();
+
+        const listener = new b2ContactListener();
+
+        listener.BeginContact = (contact: b2Contact) => {
+            const fixtureA = contact.GetFixtureA();
+            const fixtureB = contact.GetFixtureB();
+
+            const bodyA = fixtureA.GetBody();
+            const bodyB = fixtureB.GetBody();
+
+            const dataA = bodyA.GetUserData() as { eid: number };
+            const dataB = bodyB.GetUserData() as { eid: number };
+
+            if (dataA && dataB) {
+                const eidA = dataA.eid;
+                const eidB = dataB.eid;
+
+                const typeA = C_Type.type[eidA];
+                const typeB = C_Type.type[eidB];
+
+                const handler = CollisionHandler.getHandler(typeA, typeB);
+                if (handler) {
+                    handler.BeginContact(eidA, eidB);
+                }
+            }
+        };
+
+        listener.EndContact = contact => {
+            const fixtureA = contact.GetFixtureA();
+            const fixtureB = contact.GetFixtureB();
+
+            const bodyA = fixtureA.GetBody();
+            const bodyB = fixtureB.GetBody();
+
+            const dataA = bodyA.GetUserData() as { eid: number };
+            const dataB = bodyB.GetUserData() as { eid: number };
+
+            if (dataA && dataB) {
+                const eidA = dataA.eid;
+                const eidB = dataB.eid;
+
+                const typeA = C_Type.type[eidA];
+                const typeB = C_Type.type[eidB];
+
+                const handler = CollisionHandler.getHandler(typeA, typeB);
+                if (handler) {
+                    handler.EndContact(eidA, eidB);
+                }
+            }
+        };
+
+        this.world.SetContactListener(listener);
     }
 
     /**
@@ -58,5 +113,29 @@ export class GameWorld {
         createBoarder(0, 0, 0, worldHeight);
         // right
         createBoarder(worldWidth, 0, worldWidth, worldHeight);
+    }
+}
+
+class CollisionHandler {
+    private static handlers = {
+        [CollisionHandler.generateCollisionHash(EntityTypes.PLAYER, EntityTypes.ASTEROID)]: {
+            BeginContact: (eidA: number, eidB: number) => {
+                const typeA = C_Type.type[eidA];
+
+                const player = typeA === EntityTypes.PLAYER ? eidA : eidB;
+                const asteroid = typeA === EntityTypes.ASTEROID ? eidA : eidB;
+
+                EntityFactory.removeEntity(asteroid);
+            },
+            EndContact: (eidA: number, eidB: number) => {},
+        },
+    };
+
+    public static getHandler(typeA: number, typeB: number) {
+        return CollisionHandler.handlers[CollisionHandler.generateCollisionHash(typeA, typeB)];
+    }
+
+    private static generateCollisionHash(typeA: number, typeB: number): number {
+        return typeA < typeB ? (typeA << 8) | typeB : (typeB << 8) | typeA;
     }
 }

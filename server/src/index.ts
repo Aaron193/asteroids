@@ -33,7 +33,7 @@ App()
             const client = ws.getUserData().client;
             Client.clients.remove(client.cid);
 
-            EntityFactory.destroyEntity(client.eid);
+            EntityFactory.removeEntity(client.eid);
         },
         message(ws, message, isBinary) {
             if (!isBinary) return;
@@ -124,6 +124,8 @@ function tick() {
         body.SetLinearVelocity(newVelocity);
         body.SetAngle(rotation);
     }
+
+    EntityFactory.removeEntities();
 
     syncClients();
 }

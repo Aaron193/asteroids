@@ -14,6 +14,16 @@ export const world = createWorld();
 export const bodyMap = new Map<number, b2Body>();
 
 export class EntityFactory {
+    private static _instance: EntityFactory;
+    private removeEids = new Set<number>();
+
+    static get instance() {
+        if (!EntityFactory._instance) {
+            EntityFactory._instance = new EntityFactory();
+        }
+        return EntityFactory._instance;
+    }
+
     static createSpectator() {
         const eid = addEntity(world);
         addComponent(world, C_Type, eid);
@@ -48,7 +58,7 @@ export class EntityFactory {
         bodyMap.set(eid, body);
 
         const circle = new b2CircleShape();
-        circle.m_radius = meters(10);
+        circle.m_radius = meters(25 / 2);
 
         body.CreateFixture({
             shape: circle,
@@ -57,7 +67,7 @@ export class EntityFactory {
             restitution: 0.0,
             filter: {
                 categoryBits: GameWorld.CollisionBitMask.DRONE,
-                maskBits: GameWorld.CollisionBitMask.OBSTACLE | GameWorld.CollisionBitMask.DRONE,
+                maskBits: GameWorld.CollisionBitMask.OBSTACLE | GameWorld.CollisionBitMask.ASTEROID,
             },
         });
 
@@ -88,7 +98,7 @@ export class EntityFactory {
         bodyMap.set(eid, body);
 
         const circle = new b2CircleShape();
-        circle.m_radius = meters(10);
+        circle.m_radius = meters(55 / 2);
 
         body.CreateFixture({
             shape: circle,
@@ -97,21 +107,53 @@ export class EntityFactory {
             restitution: 1.0,
             filter: {
                 categoryBits: GameWorld.CollisionBitMask.ASTEROID,
-                maskBits: GameWorld.CollisionBitMask.OBSTACLE | GameWorld.CollisionBitMask.DRONE,
+                maskBits: GameWorld.CollisionBitMask.OBSTACLE,
+            },
+        });
+
+        body.CreateFixture({
+            shape: circle,
+            isSensor: true,
+            filter: {
+                categoryBits: GameWorld.CollisionBitMask.ASTEROID,
+                maskBits: GameWorld.CollisionBitMask.DRONE,
             },
         });
 
         // const force = new b2Vec2(Math.random() * 100, Math.random() * 100);
-        const mag = 0.1;
+        const mag = 0.5;
         const impulse = new b2Vec2(mag * Math.cos(Math.random()), mag * Math.sin(Math.random()));
         // body.ApplyForce(force, body.GetWorldCenter());
         body.ApplyLinearImpulseToCenter(impulse, true);
-        body.ApplyTorque(Math.random() * 0.01);
+        body.ApplyTorque(Math.random() * 0.3);
 
         return eid;
     }
 
-    static destroyEntity(eid: number) {
+    /**
+     * Public method for removing an entity
+     * Will add the entity to a remove list to be removed at the end of the tick
+     * @param eid
+     */
+    public static removeEntity(eid: number) {
+        EntityFactory.instance.removeEids.add(eid);
+    }
+
+    /**
+     * Remove entities that have been added to the remove list (to be called at the end of the game tick)
+     */
+    public static removeEntities() {
+        for (const eid of EntityFactory.instance.removeEids) {
+            EntityFactory.destroyEntity(eid);
+        }
+        EntityFactory.instance.removeEids.clear();
+    }
+
+    /**
+     * Internal method for removing an entity
+     * @param eid
+     */
+    private static destroyEntity(eid: number) {
         const body = bodyMap.get(eid);
         if (body) {
             GameWorld.instance.world.DestroyBody(body);
