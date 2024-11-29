@@ -143,6 +143,12 @@ export class Socket {
                         (document.querySelector('.join-container') as HTMLDivElement).style.display = 'none';
                     }
                     break;
+                case SERVER_PACKET_HEADER.DIED:
+                    {
+                        // This is our player's eid
+                        (document.querySelector('.join-container') as HTMLDivElement).style.display = 'block';
+                    }
+                    break;
                 default:
                     console.error('Unknown packetId', header);
                     break;

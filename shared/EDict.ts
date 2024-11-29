@@ -60,9 +60,9 @@ export class EDict<ID_TYPE, T> {
     }
 
     /**
-     * Get all entries in the dictionary
+     * Get all items in the dictionary
      */
-    entries() {
+    array() {
         return this.arr;
     }
 }

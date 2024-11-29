@@ -1,8 +1,9 @@
 import { b2World, b2Vec2, b2BodyType, b2PolygonShape, b2FixtureDef, b2EdgeShape, b2ContactListener, b2Contact } from '@box2d/core';
 import { meters } from './utils/conversion';
 import { EntityFactory, world } from './EntityFactory';
-import { C_Type } from './ecs';
+import { C_Cid, C_Type } from './ecs';
 import { EntityTypes } from '../../shared/types';
+import { Client } from './Client';
 
 export class GameWorld {
     private static _instance: GameWorld;
@@ -125,7 +126,9 @@ class CollisionHandler {
                 const player = typeA === EntityTypes.PLAYER ? eidA : eidB;
                 const asteroid = typeA === EntityTypes.ASTEROID ? eidA : eidB;
 
-                EntityFactory.removeEntity(asteroid);
+                const cid = C_Cid.cid[player];
+                const client = Client.clients.get(cid)!;
+                client.onDied(asteroid);
             },
             EndContact: (eidA: number, eidB: number) => {},
         },

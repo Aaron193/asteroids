@@ -1,5 +1,5 @@
 import { createWorld, Types, defineComponent, defineQuery, addEntity, addComponent, pipe, removeEntity } from 'bitecs';
-import { C_Body, C_Camera, C_ClientControls, C_Dynamic, C_Networked, C_Type, Q_Moving } from './ecs/index';
+import { C_Body, C_Camera, C_Cid, C_ClientControls, C_Dynamic, C_Networked, C_Type, Q_Moving } from './ecs/index';
 import { GameWorld } from './World';
 import { b2Body, b2BodyDef, b2BodyType, b2Vec2, b2FixtureDef, b2CircleShape } from '@box2d/core';
 import { EntityTypes } from '../../shared/types';
@@ -24,15 +24,16 @@ export class EntityFactory {
         return EntityFactory._instance;
     }
 
-    static createSpectator() {
+    static createSpectator(followEid?: number) {
         const eid = addEntity(world);
         addComponent(world, C_Type, eid);
         addComponent(world, C_Camera, eid);
         C_Type.type[eid] = EntityTypes.SPECTATOR;
         // follow some random moving entity
-        C_Camera.eid[eid] = getFollowEid();
+        C_Camera.eid[eid] = followEid || getFollowEid();
         return eid;
     }
+
     static createPlayer() {
         const eid = addEntity(world);
         addComponent(world, C_Type, eid);
@@ -73,6 +74,7 @@ export class EntityFactory {
 
         return eid;
     }
+
     static createAsteroid() {
         const eid = addEntity(world);
         addComponent(world, C_Type, eid);

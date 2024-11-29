@@ -44,6 +44,7 @@ export const State = {
         y: 0,
         timestamp: 0,
     },
+
     mousedown: false,
 };
 

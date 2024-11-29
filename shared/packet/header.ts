@@ -11,4 +11,5 @@ export const SERVER_PACKET_HEADER = {
     UPDATE_ENTITY: 3,
     SPAWN_SUCCESS: 4,
     SET_CAMERA: 5,
+    DIED: 6,
 };

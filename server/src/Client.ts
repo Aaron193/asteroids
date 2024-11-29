@@ -5,8 +5,8 @@ import { BufferReader } from '../../shared/packet/BufferReader';
 import { CLIENT_PACKET_HEADER, SERVER_PACKET_HEADER } from '../../shared/packet/header';
 import { EntityFactory, world } from './EntityFactory';
 import { EDict } from '../../shared/EDict';
-import { C_Camera, C_ClientControls } from './ecs';
-import { removeEntity } from 'bitecs';
+import { C_Camera, C_Cid, C_ClientControls } from './ecs';
+import { addComponent, removeEntity } from 'bitecs';
 import { meters } from './utils/conversion';
 
 const reader = new BufferReader();
@@ -16,7 +16,7 @@ let _cid = 0;
 export class Client {
     static clients = new EDict<number, Client>();
     ws: WebSocket<SocketUserData>;
-    eid: number;
+    eid!: number;
     cid: number = _cid++;
     bufferWriter: BufferWriter = new BufferWriter();
     nickname: string = '';
@@ -27,12 +27,8 @@ export class Client {
     active: boolean = false;
     constructor(ws: WebSocket<SocketUserData>) {
         this.ws = ws;
-        this.eid = EntityFactory.createSpectator();
         Client.clients.add(this.cid, this);
-
-        const writer = this.bufferWriter;
-        writer.writeU8(SERVER_PACKET_HEADER.SET_CAMERA);
-        writer.writeU32(C_Camera.eid[this.eid]);
+        this.changeBody(EntityFactory.createSpectator());
     }
 
     onSocketMessage(message: ArrayBuffer) {
@@ -55,15 +51,12 @@ export class Client {
                     this.active = true;
 
                     removeEntity(world, this.eid);
-                    this.eid = EntityFactory.createPlayer();
-                    C_Camera.eid[this.eid] = this.eid;
 
-                    // write handshake to spawn client into the game server
+                    this.changeBody(EntityFactory.createPlayer());
+
                     const writer = this.bufferWriter;
 
-                    writer.writeU8(SERVER_PACKET_HEADER.SET_CAMERA);
-                    writer.writeU32(C_Camera.eid[this.eid]);
-
+                    // write handshake to spawn client into the game server
                     writer.writeU8(SERVER_PACKET_HEADER.SPAWN_SUCCESS);
                     writer.writeU32(this.eid);
 
@@ -95,6 +88,27 @@ export class Client {
             }
         }
     }
+
+    onDied(killerEid: number) {
+        EntityFactory.removeEntity(this.eid);
+        this.changeBody(EntityFactory.createSpectator(killerEid));
+
+        const writer = this.bufferWriter;
+        writer.writeU8(SERVER_PACKET_HEADER.DIED);
+
+        this.active = false;
+    }
+
+    changeBody(eid: number) {
+        this.eid = eid;
+        addComponent(world, C_Cid, this.eid);
+        C_Cid.cid[this.eid] = this.cid;
+
+        const writer = this.bufferWriter;
+        writer.writeU8(SERVER_PACKET_HEADER.SET_CAMERA);
+        writer.writeU32(C_Camera.eid[this.eid]);
+    }
+
     syncBuffer() {
         const buffer = this.bufferWriter.getBuffer();
         this.ws.send(buffer, true);

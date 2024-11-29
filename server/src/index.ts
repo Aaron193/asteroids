@@ -103,9 +103,10 @@ const _tmpAABB_ = new b2AABB();
 function syncClients() {
     // sync spectating clients
     const physicsWorld = GameWorld.instance.world;
-    const clients = Client.clients;
+    const clients = Client.clients.array();
 
-    for (const client of clients.entries()) {
+    for (let i = 0; i < clients.length; i++) {
+        const client = clients[i];
         const eid = client.eid;
         const camEid = C_Camera.eid[eid];
 
