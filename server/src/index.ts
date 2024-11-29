@@ -9,6 +9,7 @@ import { SERVER_PACKET_HEADER } from '../../shared/packet/header';
 import { hasComponent } from 'bitecs';
 import { pixels } from './utils/conversion';
 import { EntityTypes } from '../../shared/types';
+import { MovementSystem } from './ecs/systems/movement';
 
 const port = 9001;
 
@@ -87,43 +88,7 @@ function tick() {
     const physicsWorld = GameWorld.instance.world;
     physicsWorld.Step(1 / tps, stepConfig);
 
-    const eids = Q_ClientControls(world);
-    for (let i = 0; i < eids.length; i++) {
-        const eid = eids[i];
-        const x = C_ClientControls.x[eid];
-        const y = C_ClientControls.y[eid];
-        const rotation = C_ClientControls.rotation[eid];
-        const isTurbo = +C_ClientControls.turbo[eid];
-        const body = bodyMap.get(eid)!;
-
-        const MOVE_SPEED = 2.5;
-        const ACCELERATION = 2;
-        // slow down factor
-        const DAMPING = 0.98;
-
-        const inputDirection = new b2Vec2(x, y);
-        const targetVelocity = new b2Vec2(inputDirection.x * MOVE_SPEED, inputDirection.y * MOVE_SPEED);
-
-        if (isTurbo) {
-            targetVelocity.Scale(2);
-        }
-
-        const currentVelocity = body.GetLinearVelocity();
-
-        // lerp to target velocity
-        const newVelocity = new b2Vec2(
-            currentVelocity.x + (targetVelocity.x - currentVelocity.x) * ACCELERATION * delta,
-            currentVelocity.y + (targetVelocity.y - currentVelocity.y) * ACCELERATION * delta
-        );
-
-        if (x === 0 && y === 0) {
-            newVelocity.x *= DAMPING;
-            newVelocity.y *= DAMPING;
-        }
-
-        body.SetLinearVelocity(newVelocity);
-        body.SetAngle(rotation);
-    }
+    MovementSystem(world, delta);
 
     EntityFactory.removeEntities();
 
