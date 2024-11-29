@@ -95,7 +95,7 @@ function GameUpdate(now: number, delta: number) {
     {
         const lastSend = State.mouseLastSend;
 
-        if ((now - lastSend.timestamp > 50 && lastSend.x !== State.mouse.x) || lastSend.y !== State.mouse.y) {
+        if (now - lastSend.timestamp > 50 && (lastSend.x !== State.mouse.x || lastSend.y !== State.mouse.y)) {
             const mouse = State.mouse;
             lastSend.x = mouse.x;
             lastSend.y = mouse.y;
