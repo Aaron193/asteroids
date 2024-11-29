@@ -10,6 +10,7 @@ import { hasComponent } from 'bitecs';
 import { pixels } from './utils/conversion';
 import { EntityTypes } from '../../shared/types';
 import { MovementSystem } from './ecs/systems/movement';
+import { ShootingSystem } from './ecs/systems/shoot';
 
 const port = 9001;
 
@@ -89,6 +90,7 @@ function tick() {
     physicsWorld.Step(1 / tps, stepConfig);
 
     MovementSystem(world, delta);
+    ShootingSystem(world, delta);
 
     EntityFactory.removeEntities();
 

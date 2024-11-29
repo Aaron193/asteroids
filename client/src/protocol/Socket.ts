@@ -1,6 +1,6 @@
 import { addComponent, addEntity, removeEntity } from 'bitecs';
 import { BufferReader, BufferWriter, SERVER_PACKET_HEADER } from '../../../shared/packet/index';
-import { C_Asteroid, C_Interpolate, C_Position, C_Rotation, ECS_WORLD, EID_MAP } from '../ecs';
+import { C_Asteroid, C_Bullet, C_Interpolate, C_Position, C_Rotation, ECS_WORLD, EID_MAP } from '../ecs';
 import { EntityTypes } from '../../../shared/types';
 import { State } from '..';
 import { Interpolator } from '../Interpolator';
@@ -97,6 +97,10 @@ export class Socket {
                                 addComponent(ECS_WORLD, C_Interpolate, clientEid);
                                 break;
                             case EntityTypes.PLAYER:
+                                addComponent(ECS_WORLD, C_Interpolate, clientEid);
+                                break;
+                            case EntityTypes.BULLET:
+                                addComponent(ECS_WORLD, C_Bullet, clientEid);
                                 addComponent(ECS_WORLD, C_Interpolate, clientEid);
                                 break;
                         }

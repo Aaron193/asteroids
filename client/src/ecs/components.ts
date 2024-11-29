@@ -14,3 +14,4 @@ export const C_Interpolate = defineComponent({
 });
 // type flag components
 export const C_Asteroid = defineComponent();
+export const C_Bullet = defineComponent();

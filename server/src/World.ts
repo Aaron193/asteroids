@@ -13,6 +13,7 @@ export class GameWorld {
         OBSTACLE: 1 << 0,
         DRONE: 1 << 1,
         ASTEROID: 1 << 2,
+        BULLET: 1 << 3,
     };
 
     private constructor() {
@@ -129,6 +130,17 @@ class CollisionHandler {
                 const cid = C_Cid.cid[player];
                 const client = Client.clients.get(cid)!;
                 client.onDied(asteroid);
+            },
+            EndContact: (eidA: number, eidB: number) => {},
+        },
+        [CollisionHandler.generateCollisionHash(EntityTypes.BULLET, EntityTypes.ASTEROID)]: {
+            BeginContact: (eidA: number, eidB: number) => {
+                const typeA = C_Type.type[eidA];
+
+                const bullet = typeA === EntityTypes.BULLET ? eidA : eidB;
+                const asteroid = typeA === EntityTypes.ASTEROID ? eidA : eidB;
+
+                EntityFactory.removeEntity(asteroid);
             },
             EndContact: (eidA: number, eidB: number) => {},
         },

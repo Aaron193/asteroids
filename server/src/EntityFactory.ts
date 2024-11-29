@@ -118,7 +118,7 @@ export class EntityFactory {
             isSensor: true,
             filter: {
                 categoryBits: GameWorld.CollisionBitMask.ASTEROID,
-                maskBits: GameWorld.CollisionBitMask.DRONE,
+                maskBits: GameWorld.CollisionBitMask.DRONE | GameWorld.CollisionBitMask.BULLET,
             },
         });
 
@@ -128,6 +128,48 @@ export class EntityFactory {
         // body.ApplyForce(force, body.GetWorldCenter());
         body.ApplyLinearImpulseToCenter(impulse, true);
         body.ApplyTorque(Math.random() * 0.3);
+
+        return eid;
+    }
+
+    static createBullet(x: number, y: number, angle: number) {
+        const eid = addEntity(world);
+        addComponent(world, C_Type, eid);
+        addComponent(world, C_Networked, eid);
+        addComponent(world, C_Body, eid);
+        addComponent(world, C_Dynamic, eid);
+
+        C_Type.type[eid] = EntityTypes.BULLET;
+
+        const b2world = GameWorld.instance.world;
+        const bodyDef: b2BodyDef = {
+            type: b2BodyType.b2_dynamicBody,
+            position: { x: x, y: y },
+            userData: {
+                eid: eid,
+            },
+        };
+
+        const body = b2world.CreateBody(bodyDef);
+        bodyMap.set(eid, body);
+
+        const circle = new b2CircleShape();
+        circle.m_radius = meters(5);
+
+        body.CreateFixture({
+            shape: circle,
+            density: 1.0,
+            friction: 0.0,
+            restitution: 0.0,
+            filter: {
+                categoryBits: GameWorld.CollisionBitMask.BULLET,
+                maskBits: GameWorld.CollisionBitMask.ASTEROID | GameWorld.CollisionBitMask.OBSTACLE,
+            },
+        });
+
+        const mag = 0.5;
+        const impulse = new b2Vec2(mag * Math.cos(angle), mag * Math.sin(angle));
+        body.ApplyForce(impulse, body.GetWorldCenter());
 
         return eid;
     }
