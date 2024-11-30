@@ -7,7 +7,7 @@ import { bodyMap, EntityFactory, world } from './EntityFactory';
 import { C_Camera, C_ClientControls, C_Networked, C_Type, Q_ClientControls } from './ecs/index';
 import { SERVER_PACKET_HEADER } from '../../shared/packet/header';
 import { hasComponent } from 'bitecs';
-import { pixels } from './utils/conversion';
+import { meters, pixels } from './utils/conversion';
 import { EntityTypes } from '../../shared/types';
 import { MovementSystem } from './ecs/systems/movement';
 import { ShootingSystem } from './ecs/systems/shoot';
@@ -118,8 +118,9 @@ function syncClients() {
         const positionX = pos.x;
         const positionY = pos.y;
 
-        const viewX = 1920;
-        const viewY = 1080;
+        // small buffer around view
+        const viewX = meters(1920 + 200);
+        const viewY = meters(1080 + 200);
 
         _tmpAABB_.lowerBound.Set(positionX - viewX * 0.5, positionY - viewY * 0.5);
         _tmpAABB_.upperBound.Set(positionX + viewX * 0.5, positionY + viewY * 0.5);

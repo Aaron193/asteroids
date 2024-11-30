@@ -92,6 +92,7 @@ export class GameWorld {
 
         // Create a wall
         const createBoarder = (startX: number, startY: number, endX: number, endY: number) => {
+            // TODO: make the border an actual entity (eid) so that it can be added to the collision handler nicely
             const body = this.world.CreateBody({
                 type: b2BodyType.b2_staticBody,
             });
