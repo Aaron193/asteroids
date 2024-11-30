@@ -11,6 +11,7 @@ export const C_Rotation = defineComponent({ rotation: Types.f32 });
 export const C_Interpolate = defineComponent({
     buffer: [Types.f32, Interpolator.BUFFER_SIZE * 4], // BUFFER_SIZE * [x,y,rotation,time]
     currIndex: Types.ui8,
+    initialized: Types.ui8,
 });
 // type flag components
 export const C_Asteroid = defineComponent();

@@ -11,6 +11,7 @@ import { pixels } from './utils/conversion';
 import { EntityTypes } from '../../shared/types';
 import { MovementSystem } from './ecs/systems/movement';
 import { ShootingSystem } from './ecs/systems/shoot';
+import { BulletSystem } from './ecs/systems/bullet';
 
 const port = 9001;
 
@@ -91,6 +92,7 @@ function tick() {
 
     MovementSystem(world, delta);
     ShootingSystem(world, delta);
+    BulletSystem(world, delta);
 
     EntityFactory.removeEntities();
 

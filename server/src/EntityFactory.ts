@@ -1,5 +1,5 @@
 import { createWorld, Types, defineComponent, defineQuery, addEntity, addComponent, pipe, removeEntity } from 'bitecs';
-import { C_Body, C_Camera, C_Cid, C_ClientControls, C_Dynamic, C_Networked, C_Type, Q_Moving } from './ecs/index';
+import { C_Body, C_Bullet, C_Camera, C_Cid, C_ClientControls, C_Dynamic, C_Networked, C_Type, Q_Moving } from './ecs/index';
 import { GameWorld } from './World';
 import { b2Body, b2BodyDef, b2BodyType, b2Vec2, b2FixtureDef, b2CircleShape } from '@box2d/core';
 import { EntityTypes } from '../../shared/types';
@@ -138,13 +138,17 @@ export class EntityFactory {
         addComponent(world, C_Networked, eid);
         addComponent(world, C_Body, eid);
         addComponent(world, C_Dynamic, eid);
+        addComponent(world, C_Bullet, eid);
 
         C_Type.type[eid] = EntityTypes.BULLET;
+        C_Bullet.timeLeft[eid] = 3;
+        C_Bullet.damage[eid] = 1;
 
         const b2world = GameWorld.instance.world;
         const bodyDef: b2BodyDef = {
             type: b2BodyType.b2_dynamicBody,
             position: { x: x, y: y },
+            angle: angle,
             userData: {
                 eid: eid,
             },
