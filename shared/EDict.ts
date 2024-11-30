@@ -2,14 +2,25 @@
  * EDict
  * A id -> entity dictionary utilizing a map and array for O(1) lookup and javascript's fast array iteration
  */
-export class EDict<ID_TYPE, T> {
+
+interface BaseEntity {
+    [key: string]: any;
+}
+export class EDict<T extends BaseEntity> {
     private arr: T[] = [];
-    private indexMap: Map<ID_TYPE, number> = new Map();
+    private indexMap: Map<number, number> = new Map();
+
+    private idPropName: keyof T;
+
+    constructor(idPropName: keyof T) {
+        this.idPropName = idPropName;
+    }
 
     /**
      * Add entity to the dictionary
      */
-    add(id: ID_TYPE, value: T) {
+    add(value: T) {
+        const id = value[this.idPropName];
         this.arr.push(value);
         this.indexMap.set(id, this.arr.length - 1);
     }
@@ -17,16 +28,19 @@ export class EDict<ID_TYPE, T> {
     /**
      * Remove entity from the dictionary
      */
-    remove(id: ID_TYPE) {
+    remove(id: number) {
         const index = this.indexMap.get(id);
         if (index === undefined) {
             return;
         }
 
         const lastIndex = this.arr.length - 1;
-        const temp = this.arr[index];
-        this.arr[index] = this.arr[lastIndex];
-        this.arr[lastIndex] = temp;
+        if (index !== lastIndex) {
+            const temp = this.arr[index];
+            this.arr[index] = this.arr[lastIndex];
+            this.arr[lastIndex] = temp;
+            this.indexMap.set(this.arr[index][this.idPropName], index);
+        }
 
         this.arr.pop();
         this.indexMap.delete(id);
@@ -35,14 +49,14 @@ export class EDict<ID_TYPE, T> {
     /**
      * Check if the dictionary has the entity
      */
-    has(id: ID_TYPE) {
+    has(id: number) {
         return this.indexMap.has(id);
     }
 
     /**
      * Get entity from the dictionary
      */
-    get(id: ID_TYPE) {
+    get(id: number) {
         const index = this.indexMap.get(id);
         if (index === undefined) {
             return undefined;

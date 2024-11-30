@@ -14,7 +14,7 @@ const reader = new BufferReader();
 let _cid = 0;
 
 export class Client {
-    static clients = new EDict<number, Client>();
+    static clients = new EDict<Client>('cid');
     ws: WebSocket<SocketUserData>;
     eid!: number;
     cid: number = _cid++;
@@ -27,7 +27,7 @@ export class Client {
     active: boolean = false;
     constructor(ws: WebSocket<SocketUserData>) {
         this.ws = ws;
-        Client.clients.add(this.cid, this);
+        Client.clients.add(this);
         this.changeBody(EntityFactory.createSpectator());
     }
 

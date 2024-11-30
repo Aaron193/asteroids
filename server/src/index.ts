@@ -35,7 +35,6 @@ App()
             console.log('A WebSocket connection has been closed');
             const client = ws.getUserData().client;
             Client.clients.remove(client.cid);
-
             EntityFactory.removeEntity(client.eid);
         },
         message(ws, message, isBinary) {
