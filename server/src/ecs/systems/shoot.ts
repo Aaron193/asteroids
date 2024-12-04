@@ -10,13 +10,12 @@ export function ShootingSystem(world: IWorld, delta: number) {
     for (let i = 0; i < eids.length; i++) {
         const eid = eids[i];
         const rotation = C_ClientControls.rotation[eid];
-        const isTurbo = +C_ClientControls.turbo[eid];
+        const isShooting = +C_ClientControls.shooting[eid];
         const body = bodyMap.get(eid)!;
 
-        // for now we will just have turbo and shooting the same control
-        if (isTurbo) {
+        if (isShooting) {
             const position = body.GetPosition();
-            EntityFactory.createBullet(position.x, position.y, rotation);
+            EntityFactory.createBullet(eid, position.x, position.y, rotation);
         }
     }
 }

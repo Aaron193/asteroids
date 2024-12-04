@@ -29,7 +29,7 @@ playButton.onclick = function () {
 
 const drone = new Sprite('assets/images/drone.png');
 const asteroid = new Sprite('assets/images/asteroid.png');
-const bullet = new Sprite('assets/images/drone.png');
+const bullet = new Sprite('assets/images/bullet.png');
 
 // we will move this to its own Game class at some point
 export const State = {
@@ -72,6 +72,34 @@ window.addEventListener('mouseup', function (event: MouseEvent) {
     const socket = Socket.instance;
     socket.writer.writeU8(CLIENT_PACKET_HEADER.MOUSE_UP);
     socket.send();
+});
+
+window.addEventListener('keydown', function (event: KeyboardEvent) {
+    const key = event.key;
+    switch (key) {
+        case 'Shift':
+        case ' ':
+            {
+                const socket = Socket.instance;
+                socket.writer.writeU8(CLIENT_PACKET_HEADER.TURBO_START);
+                socket.send();
+            }
+            break;
+    }
+});
+
+window.addEventListener('keyup', function (event: KeyboardEvent) {
+    const key = event.key;
+    switch (key) {
+        case 'Shift':
+        case ' ':
+            {
+                const socket = Socket.instance;
+                socket.writer.writeU8(CLIENT_PACKET_HEADER.TURBO_END);
+                socket.send();
+            }
+            break;
+    }
 });
 
 let then = performance.now();

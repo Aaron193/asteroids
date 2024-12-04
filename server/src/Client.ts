@@ -3,14 +3,16 @@ import { SocketUserData } from './index';
 import { BufferWriter } from '../../shared/packet/BufferWriter';
 import { BufferReader } from '../../shared/packet/BufferReader';
 import { CLIENT_PACKET_HEADER, SERVER_PACKET_HEADER } from '../../shared/packet/header';
-import { EntityFactory, world } from './EntityFactory';
+import { bodyMap, EntityFactory, world } from './EntityFactory';
 import { EDict } from '../../shared/EDict';
-import { C_Camera, C_Cid, C_ClientControls } from './ecs';
-import { addComponent, removeEntity } from 'bitecs';
-import { meters } from './utils/conversion';
+import { C_Camera, C_Cid, C_ClientControls, C_Networked, C_Type } from './ecs';
+import { addComponent, entityExists, hasComponent, removeEntity } from 'bitecs';
+import { b2AABB, b2Fixture } from '@box2d/core';
+import { GameWorld } from './World';
+import { meters, pixels } from './utils/conversion';
 
 const reader = new BufferReader();
-
+const _tmpAABB_ = new b2AABB();
 let _cid = 0;
 
 export class Client {
@@ -78,10 +80,18 @@ export class Client {
                     break;
                 }
                 case CLIENT_PACKET_HEADER.MOUSE_DOWN: {
-                    C_ClientControls.turbo[this.eid] = +true;
+                    C_ClientControls.shooting[this.eid] = +true;
                     break;
                 }
                 case CLIENT_PACKET_HEADER.MOUSE_UP: {
+                    C_ClientControls.shooting[this.eid] = +false;
+                    break;
+                }
+                case CLIENT_PACKET_HEADER.TURBO_START: {
+                    C_ClientControls.turbo[this.eid] = +true;
+                    break;
+                }
+                case CLIENT_PACKET_HEADER.TURBO_END: {
                     C_ClientControls.turbo[this.eid] = +false;
                     break;
                 }
@@ -113,5 +123,99 @@ export class Client {
         const buffer = this.bufferWriter.getBuffer();
         this.ws.send(buffer, true);
         this.bufferWriter.clear();
+    }
+
+    /**
+     * If we follow an entity that gets destroyed, we need to lock onto another target
+     */
+    static refreshCameras() {
+        const clients = Client.clients.array();
+
+        for (let i = 0; i < clients.length; i++) {
+            const client = clients[i];
+
+            const camEid = C_Camera.eid[client.eid];
+
+            if (!entityExists(world, camEid)) {
+                client.changeBody(EntityFactory.createSpectator());
+            }
+        }
+    }
+
+    /**
+     * Sync all clients with the current state of the game world
+     */
+    static syncClients() {
+        const physicsWorld = GameWorld.instance.world;
+        const clients = Client.clients.array();
+
+        for (let i = 0; i < clients.length; i++) {
+            const client = clients[i];
+            const eid = client.eid;
+            const camEid = C_Camera.eid[eid];
+
+            const pos = bodyMap.get(camEid)!.GetPosition();
+            const positionX = pos.x;
+            const positionY = pos.y;
+
+            // small buffer around view
+            const viewX = meters(1920 + 200);
+            const viewY = meters(1080 + 200);
+
+            _tmpAABB_.lowerBound.Set(positionX - viewX * 0.5, positionY - viewY * 0.5);
+            _tmpAABB_.upperBound.Set(positionX + viewX * 0.5, positionY + viewY * 0.5);
+
+            const oldVisible = client.visibleEids;
+            const newVisible = new Set<number>();
+            const writer = client.bufferWriter;
+
+            physicsWorld.QueryAABB(_tmpAABB_, (fixture: b2Fixture) => {
+                const body = fixture.GetBody();
+                const eid = (body.GetUserData() as { eid: number }).eid;
+                if (hasComponent(world, C_Networked, eid)) {
+                    newVisible.add(eid);
+                }
+                return true;
+            });
+
+            // NV - OV => create
+            for (const eid of newVisible) {
+                if (!oldVisible.has(eid)) {
+                    const pos = bodyMap.get(eid)!.GetPosition();
+                    const rot = bodyMap.get(eid)!.GetAngle();
+                    writer.writeU8(SERVER_PACKET_HEADER.CREATE_ENTITY);
+                    writer.writeU32(eid);
+                    writer.writeU8(C_Type.type[eid]);
+                    writer.writeF32(pixels(pos.x));
+                    writer.writeF32(pixels(pos.y));
+                    writer.writeF32(rot);
+                }
+            }
+
+            // OV - NV => destroy
+            for (const eid of oldVisible) {
+                if (!newVisible.has(eid)) {
+                    writer.writeU8(SERVER_PACKET_HEADER.DESTROY_ENTITY);
+                    writer.writeU32(eid);
+                }
+            }
+
+            // NV ∩ OV => update
+            for (const eid of newVisible) {
+                if (oldVisible.has(eid)) {
+                    const pos = bodyMap.get(eid)!.GetPosition();
+                    const rot = bodyMap.get(eid)!.GetAngle();
+                    writer.writeU8(SERVER_PACKET_HEADER.UPDATE_ENTITY);
+                    writer.writeU32(eid);
+                    writer.writeF32(pixels(pos.x));
+                    writer.writeF32(pixels(pos.y));
+                    writer.writeF32(rot);
+                }
+            }
+
+            client.visibleEids = newVisible;
+
+            client.syncBuffer();
+        }
     }
 }

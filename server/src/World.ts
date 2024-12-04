@@ -1,9 +1,10 @@
 import { b2World, b2Vec2, b2BodyType, b2PolygonShape, b2FixtureDef, b2EdgeShape, b2ContactListener, b2Contact } from '@box2d/core';
 import { meters } from './utils/conversion';
 import { EntityFactory, world } from './EntityFactory';
-import { C_Cid, C_Type } from './ecs';
+import { C_Body, C_Bullet, C_Cid, C_Static, C_Type } from './ecs';
 import { EntityTypes } from '../../shared/types';
 import { Client } from './Client';
+import { addComponent, addEntity } from 'bitecs';
 
 export class GameWorld {
     private static _instance: GameWorld;
@@ -90,12 +91,21 @@ export class GameWorld {
         const worldWidth = meters(5000);
         const worldHeight = meters(5000);
 
-        // Create a wall
-        const createBoarder = (startX: number, startY: number, endX: number, endY: number) => {
-            // TODO: make the border an actual entity (eid) so that it can be added to the collision handler nicely
+        const createBorder = (startX: number, startY: number, endX: number, endY: number) => {
+            const eid = addEntity(world);
+            addComponent(world, C_Type, eid);
+            addComponent(world, C_Body, eid);
+            addComponent(world, C_Static, eid);
+
+            C_Type.type[eid] = EntityTypes.BORDER;
+
             const body = this.world.CreateBody({
                 type: b2BodyType.b2_staticBody,
+                userData: {
+                    eid: eid,
+                },
             });
+
             const shape = new b2EdgeShape();
             shape.SetTwoSided(new b2Vec2(startX, startY), new b2Vec2(endX, endY));
             body.CreateFixture({
@@ -104,18 +114,21 @@ export class GameWorld {
                 friction: 0.0,
                 filter: {
                     categoryBits: GameWorld.CollisionBitMask.OBSTACLE,
+                    maskBits: GameWorld.CollisionBitMask.DRONE | GameWorld.CollisionBitMask.ASTEROID | GameWorld.CollisionBitMask.BULLET,
                 },
             });
+
+            return eid;
         };
 
         // top
-        createBoarder(0, 0, worldWidth, 0);
-        // bottom
-        createBoarder(0, worldHeight, worldWidth, worldHeight);
-        // left
-        createBoarder(0, 0, 0, worldHeight);
-        // right
-        createBoarder(worldWidth, 0, worldWidth, worldHeight);
+        createBorder(0, 0, worldWidth, 0);
+        // // bottom
+        createBorder(0, worldHeight, worldWidth, worldHeight);
+        // // left
+        createBorder(0, 0, 0, worldHeight);
+        // // right
+        createBorder(worldWidth, 0, worldWidth, worldHeight);
     }
 }
 
@@ -142,6 +155,35 @@ class CollisionHandler {
                 const asteroid = typeA === EntityTypes.ASTEROID ? eidA : eidB;
 
                 EntityFactory.removeEntity(asteroid);
+            },
+            EndContact: (eidA: number, eidB: number) => {},
+        },
+        [CollisionHandler.generateCollisionHash(EntityTypes.BULLET, EntityTypes.BORDER)]: {
+            BeginContact: (eidA: number, eidB: number) => {
+                const typeA = C_Type.type[eidA];
+
+                const bullet = typeA === EntityTypes.BULLET ? eidA : eidB;
+                const border = typeA === EntityTypes.BORDER ? eidA : eidB;
+
+                EntityFactory.removeEntity(bullet);
+                console.log('Bullet hit border');
+            },
+            EndContact: (eidA: number, eidB: number) => {},
+        },
+        [CollisionHandler.generateCollisionHash(EntityTypes.BULLET, EntityTypes.PLAYER)]: {
+            BeginContact: (eidA: number, eidB: number) => {
+                const typeA = C_Type.type[eidA];
+
+                const bullet = typeA === EntityTypes.BULLET ? eidA : eidB;
+                const player = typeA === EntityTypes.PLAYER ? eidA : eidB;
+
+                const owner = C_Bullet.owner[bullet];
+
+                if (owner === player) return;
+
+                EntityFactory.removeEntity(bullet);
+                const client = Client.clients.get(C_Cid.cid[player])!;
+                client.onDied(owner);
             },
             EndContact: (eidA: number, eidB: number) => {},
         },

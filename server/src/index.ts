@@ -1,14 +1,9 @@
 import { App, WebSocket } from 'uWebSockets.js';
-import { b2AABB, b2Fixture, b2StepConfig, b2Vec2 } from '@box2d/core';
+import { b2StepConfig } from '@box2d/core';
 import NanoTimer from 'nanotimer';
 import { Client } from './Client';
 import { GameWorld } from './World';
-import { bodyMap, EntityFactory, world } from './EntityFactory';
-import { C_Camera, C_ClientControls, C_Networked, C_Type, Q_ClientControls } from './ecs/index';
-import { SERVER_PACKET_HEADER } from '../../shared/packet/header';
-import { hasComponent } from 'bitecs';
-import { meters, pixels } from './utils/conversion';
-import { EntityTypes } from '../../shared/types';
+import { EntityFactory, world } from './EntityFactory';
 import { MovementSystem } from './ecs/systems/movement';
 import { ShootingSystem } from './ecs/systems/shoot';
 import { BulletSystem } from './ecs/systems/bullet';
@@ -94,86 +89,10 @@ function tick() {
     BulletSystem(world, delta);
 
     EntityFactory.removeEntities();
+    Client.refreshCameras();
 
-    syncClients();
+    Client.syncClients();
 }
 
 const timer = new NanoTimer();
 timer.setInterval(tick, '', timeStepMs + 'm');
-
-const _tmpAABB_ = new b2AABB();
-
-function syncClients() {
-    // sync spectating clients
-    const physicsWorld = GameWorld.instance.world;
-    const clients = Client.clients.array();
-
-    for (let i = 0; i < clients.length; i++) {
-        const client = clients[i];
-        const eid = client.eid;
-        const camEid = C_Camera.eid[eid];
-
-        const pos = bodyMap.get(camEid)!.GetPosition();
-        const positionX = pos.x;
-        const positionY = pos.y;
-
-        // small buffer around view
-        const viewX = meters(1920 + 200);
-        const viewY = meters(1080 + 200);
-
-        _tmpAABB_.lowerBound.Set(positionX - viewX * 0.5, positionY - viewY * 0.5);
-        _tmpAABB_.upperBound.Set(positionX + viewX * 0.5, positionY + viewY * 0.5);
-
-        const oldVisible = client.visibleEids;
-        const newVisible = new Set<number>();
-        const writer = client.bufferWriter;
-
-        physicsWorld.QueryAABB(_tmpAABB_, (fixture: b2Fixture) => {
-            const body = fixture.GetBody();
-            const eid = (body.GetUserData() as { eid: number }).eid;
-            if (hasComponent(world, C_Networked, eid)) {
-                newVisible.add(eid);
-            }
-            return true;
-        });
-
-        // NV - OV => create
-        for (const eid of newVisible) {
-            if (!oldVisible.has(eid)) {
-                const pos = bodyMap.get(eid)!.GetPosition();
-                const rot = bodyMap.get(eid)!.GetAngle();
-                writer.writeU8(SERVER_PACKET_HEADER.CREATE_ENTITY);
-                writer.writeU32(eid);
-                writer.writeU8(C_Type.type[eid]);
-                writer.writeF32(pixels(pos.x));
-                writer.writeF32(pixels(pos.y));
-                writer.writeF32(rot);
-            }
-        }
-
-        // OV - NV => destroy
-        for (const eid of oldVisible) {
-            if (!newVisible.has(eid)) {
-                writer.writeU8(SERVER_PACKET_HEADER.DESTROY_ENTITY);
-                writer.writeU32(eid);
-            }
-        }
-
-        // NV ∩ OV => update
-        for (const eid of newVisible) {
-            if (oldVisible.has(eid)) {
-                const pos = bodyMap.get(eid)!.GetPosition();
-                const rot = bodyMap.get(eid)!.GetAngle();
-                writer.writeU8(SERVER_PACKET_HEADER.UPDATE_ENTITY);
-                writer.writeU32(eid);
-                writer.writeF32(pixels(pos.x));
-                writer.writeF32(pixels(pos.y));
-                writer.writeF32(rot);
-            }
-        }
-
-        client.visibleEids = newVisible;
-
-        client.syncBuffer();
-    }
-}

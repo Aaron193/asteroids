@@ -1,9 +1,9 @@
-import { createWorld, Types, defineComponent, defineQuery, addEntity, addComponent, pipe, removeEntity } from 'bitecs';
-import { C_Body, C_Bullet, C_Camera, C_Cid, C_ClientControls, C_Dynamic, C_Networked, C_Type, Q_Moving } from './ecs/index';
+import { createWorld, addEntity, addComponent, removeEntity } from 'bitecs';
+import { C_Body, C_Bullet, C_BulletUpgrade, C_Camera, C_ClientControls, C_Dynamic, C_Networked, C_Type, Q_Moving } from './ecs/index';
 import { GameWorld } from './World';
-import { b2Body, b2BodyDef, b2BodyType, b2Vec2, b2FixtureDef, b2CircleShape } from '@box2d/core';
+import { b2Body, b2BodyDef, b2BodyType, b2Vec2, b2CircleShape } from '@box2d/core';
 import { EntityTypes } from '../../shared/types';
-import { meters, pixels } from './utils/conversion';
+import { meters } from './utils/conversion';
 
 export const world = createWorld();
 
@@ -42,9 +42,12 @@ export class EntityFactory {
         addComponent(world, C_Networked, eid);
         addComponent(world, C_Camera, eid);
         addComponent(world, C_ClientControls, eid);
+        addComponent(world, C_BulletUpgrade, eid);
 
         C_Type.type[eid] = EntityTypes.PLAYER;
         C_Camera.eid[eid] = eid;
+        C_BulletUpgrade.damage[eid] = 10;
+        C_BulletUpgrade.reload[eid] = 500;
 
         const b2world = GameWorld.instance.world;
         const bodyDef: b2BodyDef = {
@@ -68,7 +71,7 @@ export class EntityFactory {
             restitution: 0.0,
             filter: {
                 categoryBits: GameWorld.CollisionBitMask.DRONE,
-                maskBits: GameWorld.CollisionBitMask.OBSTACLE | GameWorld.CollisionBitMask.ASTEROID,
+                maskBits: GameWorld.CollisionBitMask.OBSTACLE | GameWorld.CollisionBitMask.ASTEROID | GameWorld.CollisionBitMask.BULLET,
             },
         });
 
@@ -132,7 +135,7 @@ export class EntityFactory {
         return eid;
     }
 
-    static createBullet(x: number, y: number, angle: number) {
+    static createBullet(owner: number, x: number, y: number, angle: number) {
         const eid = addEntity(world);
         addComponent(world, C_Type, eid);
         addComponent(world, C_Networked, eid);
@@ -142,13 +145,14 @@ export class EntityFactory {
 
         C_Type.type[eid] = EntityTypes.BULLET;
         C_Bullet.timeLeft[eid] = 3;
-        C_Bullet.damage[eid] = 1;
+        C_Bullet.owner[eid] = owner;
 
         const b2world = GameWorld.instance.world;
         const bodyDef: b2BodyDef = {
             type: b2BodyType.b2_dynamicBody,
             position: { x: x, y: y },
             angle: angle,
+            bullet: true,
             userData: {
                 eid: eid,
             },
@@ -159,15 +163,15 @@ export class EntityFactory {
 
         const circle = new b2CircleShape();
         circle.m_radius = meters(5);
-
         body.CreateFixture({
             shape: circle,
             density: 1.0,
             friction: 0.0,
             restitution: 0.0,
+            isSensor: true,
             filter: {
                 categoryBits: GameWorld.CollisionBitMask.BULLET,
-                maskBits: GameWorld.CollisionBitMask.ASTEROID | GameWorld.CollisionBitMask.OBSTACLE,
+                maskBits: GameWorld.CollisionBitMask.ASTEROID | GameWorld.CollisionBitMask.OBSTACLE | GameWorld.CollisionBitMask.DRONE,
             },
         });
 

@@ -3,6 +3,8 @@ export const CLIENT_PACKET_HEADER = {
     MOUSE: 1,
     MOUSE_DOWN: 2,
     MOUSE_UP: 3,
+    TURBO_START: 4,
+    TURBO_END: 5,
 };
 
 export const SERVER_PACKET_HEADER = {

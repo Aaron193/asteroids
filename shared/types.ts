@@ -1,6 +1,7 @@
 export const EntityTypes = {
-    SPECTATOR: 0,
-    PLAYER: 1,
-    ASTEROID: 2,
-    BULLET: 3,
+    BORDER: 0,
+    SPECTATOR: 1,
+    PLAYER: 2,
+    ASTEROID: 3,
+    BULLET: 4,
 };
