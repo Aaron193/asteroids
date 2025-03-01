@@ -65,17 +65,15 @@ export class Client {
                     console.log('client joined', nickname);
                     break;
                 }
-                case CLIENT_PACKET_HEADER.MOUSE: {
+                case CLIENT_PACKET_HEADER.MOVE: {
+                    const dir = reader.readU8();
+
+                    C_ClientControls.dir[this.eid] = dir;
+                    break;
+                }
+                case CLIENT_PACKET_HEADER.ANGLE: {
                     const angle = reader.readF32();
-                    let mag = reader.readF32();
-                    if (mag < 1) mag = 0;
-                    if (mag > 1) mag = 1;
 
-                    const velX = mag * Math.cos(angle);
-                    const velY = mag * Math.sin(angle);
-
-                    C_ClientControls.x[this.eid] = velX;
-                    C_ClientControls.y[this.eid] = velY;
                     C_ClientControls.rotation[this.eid] = angle;
                     break;
                 }

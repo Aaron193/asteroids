@@ -1,10 +1,12 @@
 export const CLIENT_PACKET_HEADER = {
     JOIN_SERVER: 0,
-    MOUSE: 1,
+    // MOUSE: 1,
+    MOVE: 1,
     MOUSE_DOWN: 2,
     MOUSE_UP: 3,
     TURBO_START: 4,
     TURBO_END: 5,
+    ANGLE: 6,
 };
 
 export const SERVER_PACKET_HEADER = {

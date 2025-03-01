@@ -45,6 +45,11 @@ export const State = {
         y: 0,
         timestamp: 0,
     },
+    moveDir: 0,
+    moveLastSend: {
+        dir: 0,
+        timestamp: 0,
+    },
 
     mousedown: false,
 };
@@ -85,6 +90,22 @@ window.addEventListener('keydown', function (event: KeyboardEvent) {
                 socket.send();
             }
             break;
+        case 'w':
+        case 'ArrowUp':
+            State.moveDir |= 1;
+            break;
+        case 'a':
+        case 'ArrowLeft':
+            State.moveDir |= 2;
+            break;
+        case 's':
+        case 'ArrowDown':
+            State.moveDir |= 4;
+            break;
+        case 'd':
+        case 'ArrowRight':
+            State.moveDir |= 8;
+            break;
     }
 });
 
@@ -98,6 +119,22 @@ window.addEventListener('keyup', function (event: KeyboardEvent) {
                 socket.writer.writeU8(CLIENT_PACKET_HEADER.TURBO_END);
                 socket.send();
             }
+            break;
+        case 'w':
+        case 'ArrowUp':
+            State.moveDir &= ~1;
+            break;
+        case 'a':
+        case 'ArrowLeft':
+            State.moveDir &= ~2;
+            break;
+        case 's':
+        case 'ArrowDown':
+            State.moveDir &= ~4;
+            break;
+        case 'd':
+        case 'ArrowRight':
+            State.moveDir &= ~8;
             break;
     }
 });
@@ -119,7 +156,24 @@ tick();
 function GameUpdate(now: number, delta: number) {
     Interpolator.instance.update();
 
-    // Mouse update
+    // Move update
+    {
+        const lastSend = State.moveLastSend;
+
+        if (now - lastSend.timestamp > 50 && lastSend.dir !== State.moveDir) {
+            const dir = State.moveDir;
+            lastSend.dir = dir;
+            lastSend.timestamp = now;
+
+            const socket = Socket.instance;
+            const writer = socket.writer;
+
+            writer.writeU8(CLIENT_PACKET_HEADER.MOVE);
+            writer.writeU8(dir);
+            socket.send();
+        }
+    }
+    // ANGLE UPDATE
     {
         const lastSend = State.mouseLastSend;
 
@@ -133,17 +187,13 @@ function GameUpdate(now: number, delta: number) {
             const centerY = window.innerHeight * 0.5;
 
             const angle = Math.atan2(mouse.y - centerY, mouse.x - centerX);
-            const distFromCenter = Math.sqrt((mouse.x - centerX) ** 2 + (mouse.y - centerY) ** 2);
-            const mag = Math.min(1, Math.max(distFromCenter / 100, 0));
 
             const socket = Socket.instance;
             const writer = socket.writer;
 
-            writer.writeU8(CLIENT_PACKET_HEADER.MOUSE);
+            writer.writeU8(CLIENT_PACKET_HEADER.ANGLE);
             writer.writeF32(angle);
-            writer.writeF32(mag);
             socket.send();
-            // console.log('sending angle', angle);
         }
     }
 }

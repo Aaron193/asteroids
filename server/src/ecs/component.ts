@@ -9,8 +9,7 @@ export const C_Networked = defineComponent();
 export const C_Type = defineComponent({ type: Types.ui32 });
 export const C_Camera = defineComponent({ eid: Types.ui32 });
 export const C_ClientControls = defineComponent({
-    x: Types.f32,
-    y: Types.f32,
+    dir: Types.ui8,
     rotation: Types.f32,
     shooting: Types.ui8,
     turbo: Types.ui8,
