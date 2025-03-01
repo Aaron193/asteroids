@@ -68,6 +68,8 @@ export class Socket {
             throw new Error('Received a string from the server! No handler setup for this!');
         }
 
+        Interpolator.tick();
+
         const reader = this.reader;
         reader.loadBuffer(new Uint8Array(event.data).buffer);
         while (reader.getOffset() < reader.byteLength()) {

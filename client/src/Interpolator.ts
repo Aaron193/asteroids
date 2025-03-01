@@ -4,12 +4,21 @@ export class Interpolator {
     private static _instance: Interpolator;
     public static BUFFER_SIZE = 8;
     public static LAG = 100;
+    public static ticks = 0;
+    public static firstTickTime = 0;
 
     static get instance(): Interpolator {
         if (!Interpolator._instance) {
             Interpolator._instance = new Interpolator();
         }
         return Interpolator._instance;
+    }
+
+    static tick() {
+        if (Interpolator.ticks === 0) {
+            Interpolator.firstTickTime = performance.now();
+        }
+        Interpolator.ticks++;
     }
 
     addSnapshot(eid: number) {
